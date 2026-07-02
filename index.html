@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Next You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg-outer: #0a0a0b;
+    --bg-panel: #131315;
+    --bg-panel-2: #16161a;
+    --bg-panel-3: #1c1c20;
+    --border-hair: rgba(255, 255, 255, 0.08);
+    --border-hair-strong: rgba(255, 255, 255, 0.14);
+    --text-primary: #eaeaec;
+    --text-secondary: #8d8d93;
+    --text-muted: #4d4d52;
+    --glow-warm: #fff3d6;
+    --accent: #ffd479;
+    --good: #8fd6a6;
+    --bad: #e08a8a;
+    --radius-outer: 28px;
+    --radius-pill: 999px;
+    --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-outer);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea { font-family: inherit; }
+  ::selection { background: rgba(255,255,255,0.15); }
+  .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
+  .scroll-thin::-webkit-scrollbar-track { background: transparent; }
+  @keyframes blink-cursor { 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
+  @keyframes pulse-dot { 0%,60%,100%{opacity:.25;transform:translateY(0);} 30%{opacity:1;transform:translateY(-2px);} }
+  @keyframes flicker-glow { 0%,100%{opacity:.9;} 50%{opacity:1;} }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .app-outer {
+    height: 100vh; width: 100vw;
+    display: flex; align-items: center; justify-content: center;
+    padding: 28px;
+    background: radial-gradient(120% 120% at 50% 0%, #141416 0%, #08080a 70%);
+  }
+  .app-panel {
+    width: 100%; max-width: 1360px; height: 100%; max-height: 860px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-outer);
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.6);
+    display: grid;
+    grid-template-columns: 210px 1px 1fr 1px 230px;
+    overflow: hidden;
+    position: relative;
+  }
+  .divider { background: var(--border-hair); }
+  .side-panel { padding: 26px 20px; display: flex; flex-direction: column; }
+  .new-chat-btn {
+    display: flex; align-items: center; gap: 10px;
+    background: transparent; border: none; color: var(--text-primary);
+    font-family: var(--font-display); font-size: 12px; font-weight: 500;
+    letter-spacing: .16em; text-transform: uppercase; padding: 0;
+  }
+  .new-chat-btn:hover { color: #fff; }
+  .history-header {
+    display: flex; align-items: center; gap: 8px; color: var(--text-primary);
+    font-family: var(--font-display); font-size: 12px; font-weight: 500;
+    letter-spacing: .16em; text-transform: uppercase; margin-bottom: 22px;
+  }
+  .history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+  .history-list li { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); }
+  .history-index { color: var(--text-muted); flex-shrink: 0; }
+  .main-col { display: flex; flex-direction: column; min-width: 0; }
+  .main-header { padding: 26px 32px 0; display: flex; align-items: center; justify-content: space-between; }
+  .brand {
+    font-family: var(--font-display); font-size: 13px; font-weight: 500;
+    letter-spacing: .3em; text-transform: uppercase; color: var(--text-primary);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .brand-cursor { width: 8px; height: 15px; background: #d9d9dc; display: inline-block; margin-left: 4px; animation: blink-cursor 1s step-end infinite; }
+  .header-btns { display: flex; gap: 8px; }
+  .ghost-btn {
+    background: transparent; border: 1px solid var(--border-hair-strong); color: var(--text-secondary);
+    border-radius: 8px; padding: 6px 12px; font-size: 11.5px; letter-spacing: .04em;
+  }
+  .ghost-btn:hover { color: var(--text-primary); border-color: rgba(255,255,255,.3); }
+  .ghost-btn.active { color: var(--accent); border-color: rgba(255,212,121,.4); }
+  .main-body { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+  .empty-hero {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 18px; padding: 20px;
+  }
+  .lamp-wrap { position: relative; display: flex; justify-content: center; }
+  .lamp-bulb { filter: drop-shadow(0 0 6px var(--glow-warm)); animation: flicker-glow 3.2s ease-in-out infinite; }
+  .lamp-glow {
+    position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(255,243,214,.14) 0%, rgba(255,243,214,0) 70%);
+    pointer-events: none; z-index: 1;
+  }
+  .typing-bubble { display: inline-flex; align-items: center; gap: 5px; background: var(--bg-panel-2); border: 1px solid var(--border-hair); border-radius: 16px; padding: 12px 16px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-secondary); animation: pulse-dot 1.2s ease-in-out infinite; }
+  .hero-title { font-family: var(--font-display); font-size: 15px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--text-primary); margin: 6px 0 0; }
+  .hero-subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+  .chat-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 24px 32px 12px; }
+  .chat-log { display: flex; flex-direction: column; gap: 16px; }
+  .msg-row { display: flex; }
+  .msg-user { justify-content: flex-end; }
+  .msg-assistant { justify-content: flex-start; }
+  .msg-bubble { max-width: 68%; background: var(--bg-panel-2); border: 1px solid var(--border-hair); border-radius: 14px; padding: 12px 15px; }
+  .msg-user .msg-bubble { background: #1c1c20; }
+  .msg-bubble-processing { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+  .msg-bubble-processing .typing-bubble { padding: 4px 8px; border: none; background: transparent; }
+  .processing-label { font-size: 12px; color: var(--text-muted); letter-spacing: .04em; }
+  .msg-text { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text-primary); }
+  .msg-attachments { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .msg-attachment { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-secondary); background: rgba(255,255,255,.04); border: 1px solid var(--border-hair); border-radius: 8px; padding: 6px 9px; width: fit-content; }
+  .msg-error .msg-text { color: var(--bad); }
+  .view-results-btn {
+    margin-top: 10px; background: var(--accent); color: #17140b; border: none;
+    border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; letter-spacing: .02em;
+  }
+  .input-area { padding: 16px 32px 26px; }
+  .attachment-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .attachment-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--bg-panel-2); border: 1px solid var(--border-hair); border-radius: 8px; padding: 6px 9px; font-size: 12px; color: var(--text-secondary); }
+  .attachment-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .attachment-remove { background: transparent; border: none; color: var(--text-muted); display: flex; padding: 0; margin-left: 2px; }
+  .attachment-remove:hover { color: var(--text-primary); }
+  .input-bar { display: flex; align-items: center; gap: 12px; background: var(--bg-panel-2); border: 1px solid var(--border-hair); border-radius: var(--radius-pill); padding: 8px 10px; }
+  .attach-anchor { position: relative; flex-shrink: 0; }
+  .attach-btn, .send-btn {
+    width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-hair-strong);
+    background: var(--bg-panel); color: var(--text-primary); display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; transition: border-color .15s ease;
+  }
+  .attach-btn:hover, .send-btn:hover { border-color: rgba(255,255,255,.3); }
+  .attach-btn:disabled, .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .text-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 13.5px; padding: 8px 4px; }
+  .text-input::placeholder { color: var(--text-muted); }
+  .attach-menu {
+    position: absolute; bottom: calc(100% + 10px); left: 0;
+    background: var(--bg-panel-2); border: 1px solid var(--border-hair-strong);
+    border-radius: 12px; padding: 6px; display: none; flex-direction: column; gap: 2px;
+    width: 240px; box-shadow: 0 20px 40px -12px rgba(0,0,0,.6); z-index: 10;
+  }
+  .attach-menu.open { display: flex; }
+  .attach-option { display: flex; align-items: center; gap: 10px; background: transparent; border: none; color: var(--text-primary); text-align: left; padding: 9px 10px; border-radius: 8px; }
+  .attach-option:hover { background: rgba(255,255,255,.06); }
+  .attach-option-text { display: flex; flex-direction: column; gap: 1px; }
+  .attach-option-label { font-size: 13px; color: var(--text-primary); }
+  .attach-option-hint { font-size: 11px; color: var(--text-muted); }
+
+  /* ---------- Results panel (fixes the crop problem) ---------- */
+  #resultsPanel {
+    position: absolute; inset: 0; background: var(--bg-panel);
+    display: none; flex-direction: column; z-index: 20; animation: fadeIn .18s ease;
+  }
+  #resultsPanel.open { display: flex; }
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 28px; border-bottom: 1px solid var(--border-hair); flex-shrink: 0;
+  }
+  .results-title { font-family: var(--font-display); font-size: 14px; letter-spacing: .1em; text-transform: uppercase; }
+  .results-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+  .results-jd-box {
+    margin: 0 28px; padding: 12px 14px; background: var(--bg-panel-2); border: 1px solid var(--border-hair);
+    border-radius: 10px; font-size: 12px; color: var(--text-secondary); flex-shrink: 0;
+    max-height: 70px; overflow-y: auto; line-height: 1.5;
+  }
+  .results-jd-box b { color: var(--text-primary); font-weight: 600; }
+  .table-scroll-outer { flex: 1; min-height: 0; overflow: auto; margin: 14px 28px 24px; border: 1px solid var(--border-hair); border-radius: 12px; }
+  table.results-table { border-collapse: collapse; width: max-content; min-width: 100%; font-size: 12.5px; }
+  table.results-table thead th {
+    position: sticky; top: 0; background: #19191d; color: var(--text-secondary);
+    text-align: left; padding: 10px 12px; font-weight: 600; font-size: 11px;
+    letter-spacing: .04em; text-transform: uppercase; border-bottom: 1px solid var(--border-hair-strong);
+    white-space: nowrap; z-index: 2;
+  }
+  table.results-table thead th:first-child { position: sticky; left: 0; z-index: 3; }
+  table.results-table tbody td:first-child, table.results-table tbody td:nth-child(2) {
+    position: sticky; left: 0; background: var(--bg-panel); z-index: 1;
+  }
+  table.results-table tbody td:nth-child(2) { left: 52px; }
+  table.results-table tbody tr { border-bottom: 1px solid var(--border-hair); cursor: pointer; }
+  table.results-table tbody tr:hover td { background: var(--bg-panel-3); }
+  table.results-table td { padding: 10px 12px; vertical-align: top; max-width: 240px; }
+  .cell-clamp { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; color: var(--text-secondary); }
+  .rank-pill { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--bg-panel-2); border: 1px solid var(--border-hair-strong); font-weight: 600; font-size: 11.5px; }
+  .rank-1 { background: rgba(255,212,121,.14); border-color: rgba(255,212,121,.4); color: var(--accent); }
+  .match-badge { font-weight: 700; font-size: 12.5px; }
+  .match-high { color: var(--good); }
+  .match-mid { color: var(--accent); }
+  .match-low { color: var(--bad); }
+  .name-cell { font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+  .skill-chip { display: inline-block; background: rgba(255,255,255,.05); border: 1px solid var(--border-hair); border-radius: 10px; padding: 1px 7px; font-size: 10.5px; margin: 1px 3px 1px 0; color: var(--text-secondary); }
+  .row-hint { color: var(--text-muted); font-size: 10.5px; margin-top: 4px; }
+
+  /* ---------- Detail modal — full, unclipped text ---------- */
+  #detailOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 40; display: none; align-items: center; justify-content: center; padding: 30px; }
+  #detailOverlay.open { display: flex; }
+  #detailModal {
+    width: 100%; max-width: 640px; max-height: 100%; background: var(--bg-panel-2);
+    border: 1px solid var(--border-hair-strong); border-radius: 18px; overflow: hidden;
+    display: flex; flex-direction: column; box-shadow: 0 30px 60px -20px rgba(0,0,0,.7);
+  }
+  .detail-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 20px 22px; border-bottom: 1px solid var(--border-hair); flex-shrink: 0; }
+  .detail-name { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+  .detail-contact { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.6; }
+  .detail-contact a { color: var(--text-secondary); }
+  .detail-close { background: transparent; border: 1px solid var(--border-hair-strong); color: var(--text-primary); border-radius: 8px; width: 30px; height: 30px; flex-shrink: 0; }
+  .detail-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .detail-section-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 6px; }
+  .detail-section-text { font-size: 13px; line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; word-break: break-word; }
+  .detail-match-row { display: flex; align-items: center; gap: 12px; }
+  .detail-match-num { font-family: var(--font-display); font-size: 26px; font-weight: 600; }
+
+  @media (max-width: 900px) {
+    .app-outer { padding: 0; }
+    .app-panel { max-height: 100vh; border-radius: 0; grid-template-columns: 0 0 1fr 0 0; }
+    .side-panel { display: none; }
+    .main-header { padding: 18px 18px 0; }
+    .chat-scroll { padding: 18px 18px 12px; }
+    .input-area { padding: 14px 18px 20px; }
+    .results-jd-box, .table-scroll-outer { margin-left: 14px; margin-right: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="app-outer">
+  <div class="app-panel">
+    <!-- Left sidebar -->
+    <aside class="side-panel">
+      <button class="new-chat-btn" id="newChatBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>New Chat</span>
+      </button>
+    </aside>
+    <div class="divider"></div>
+    <!-- Main column -->
+    <main class="main-col">
+      <div class="main-header">
+        <span class="brand">Next You<span class="brand-cursor"></span></span>
+        <div class="header-btns">
+          <button class="ghost-btn" id="viewResultsHeaderBtn" style="display:none;">View Results</button>
+        </div>
+      </div>
+      <div class="main-body">
+        <!-- Empty hero state -->
+        <div class="empty-hero" id="emptyHero">
+          <div class="lamp-wrap">
+            <svg width="140" height="150" viewBox="0 0 140 150" fill="none">
+              <path d="M88 0V16C88 21 92 21 96 21C100 21 104 21 104 26C104 31 100 32 96 32C92 32 70 32 70 32V56" stroke="rgba(255,255,255,0.18)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M70 56L34 96C30 100 33 108 40 108H100C107 108 110 100 106 96L70 56Z" fill="#0f0f11" stroke="rgba(255,255,255,0.14)" stroke-width="1.4"/>
+              <ellipse cx="70" cy="108" rx="30" ry="4" fill="#050506"/>
+              <circle cx="70" cy="112" r="6" fill="var(--glow-warm)" class="lamp-bulb"/>
+            </svg>
+            <div class="lamp-glow"></div>
+          </div>
+          <div class="typing-bubble">
+            <span class="dot" style="animation-delay:0s"></span>
+            <span class="dot" style="animation-delay:.15s"></span>
+            <span class="dot" style="animation-delay:.3s"></span>
+          </div>
+          <h1 class="hero-title">Hello, how can I help you today?</h1>
+          <p class="hero-subtitle">Type the job description, attach up to 50 resumes, and send.</p>
+        </div>
+        <!-- Chat log -->
+        <div class="chat-scroll scroll-thin" id="chatScroll" style="display:none;">
+          <div class="chat-log" id="chatLog"></div>
+        </div>
+
+        <!-- Results panel (table + expandable rows — fixes text cropping) -->
+        <div id="resultsPanel">
+          <div class="results-header">
+            <div>
+              <div class="results-title">Ranked Candidates</div>
+              <div class="results-sub" id="resultsCount">—</div>
+            </div>
+            <button class="ghost-btn" id="closeResultsBtn">Back to Chat</button>
+          </div>
+          <div class="results-jd-box" id="resultsJdBox"></div>
+          <div class="table-scroll-outer scroll-thin">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Match</th>
+                  <th>Name</th>
+                  <th>Skills</th>
+                  <th>Experience</th>
+                  <th>Projects</th>
+                  <th>Education</th>
+                  <th>Strengths</th>
+                  <th>Missing</th>
+                </tr>
+              </thead>
+              <tbody id="resultsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Input area -->
+      <div class="input-area">
+        <div class="attachment-row" id="attachmentRow" style="display:none;"></div>
+        <div class="input-bar">
+          <div class="attach-anchor">
+            <button class="attach-btn" id="attachBtn" aria-label="Attach file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+            <div class="attach-menu" id="attachMenu">
+              <button class="attach-option" data-type="doc" data-accept=".doc,.docx,.pdf,.txt">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 3.5H14L18 7.5V20.5H6V3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M14 3.5V7.5H18" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8.5 12H15.5M8.5 15H15.5M8.5 18H12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <span class="attach-option-text"><span class="attach-option-label">Document</span><span class="attach-option-hint">.pdf, .docx, .txt — resumes</span></span>
+              </button>
+              <button class="attach-option" data-type="sheet" data-accept=".xlsx,.xls,.csv">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="4.5" width="16" height="15" rx="1.2" stroke="currentColor" stroke-width="1.4"/><path d="M4 9.5H20M4 14.5H20M10 4.5V19.5M15 4.5V19.5" stroke="currentColor" stroke-width="1.1"/></svg>
+                <span class="attach-option-text"><span class="attach-option-label">Sheet</span><span class="attach-option-hint">.xlsx, .csv — bulk resumes</span></span>
+              </button>
+              <button class="attach-option" data-type="photo" data-accept="image/*">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="15" rx="1.4" stroke="currentColor" stroke-width="1.4"/><circle cx="9" cy="10" r="1.6" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 17L9.5 12.5L13 15.5L16 12L19.5 16" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="attach-option-text"><span class="attach-option-label">Photo</span><span class="attach-option-hint">.jpg, .png</span></span>
+              </button>
+            </div>
+            <input type="file" id="fileInput" style="display:none;" multiple />
+          </div>
+          <input type="text" class="text-input" id="textInput" placeholder="Paste the job description here, then attach resumes and send..." />
+          <button class="send-btn" id="sendBtn" aria-label="Send message">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 3L3 10.5L10.5 13.5M21 3L13.5 21L10.5 13.5M21 3L10.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+    <div class="divider"></div>
+    <!-- Right sidebar -->
+    <aside class="side-panel">
+      <div class="history-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.4"/><path d="M12 7.5V12L15 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>History</span>
+      </div>
+      <ol class="history-list">
+        <li><span class="history-index">1.</span><span>Type or paste the job description in the message box</span></li>
+        <li><span class="history-index">2.</span><span>Attach up to 50 resumes (PDF, DOCX, image, or sheet)</span></li>
+        <li><span class="history-index">3.</span><span>Bot 1 extracts each resume, Bot 2 ranks them against the JD</span></li>
+        <li><span class="history-index">4.</span><span>Click any row in Results to see the full, unclipped profile</span></li>
+      </ol>
+    </aside>
+  </div>
+</div>
+
+<!-- Detail modal: full text, nothing truncated -->
+<div id="detailOverlay">
+  <div id="detailModal">
+    <div class="detail-head">
+      <div>
+        <div class="detail-name" id="dmName">—</div>
+        <div class="detail-contact" id="dmContact"></div>
+      </div>
+      <button class="detail-close" id="dmClose">✕</button>
+    </div>
+    <div class="detail-body" id="dmBody"></div>
+  </div>
+</div>
+
+<script>
+  const API_BASE_URL = window.location.origin; // same server serves frontend + API
+
+  // ---------- State ----------
+  let messages = [];
+  let attachments = [];
+  let isProcessing = false;
+  let lastJD = '';
+  let lastRanked = [];
+
+  // ---------- Elements ----------
+  const emptyHero = document.getElementById('emptyHero');
+  const chatScroll = document.getElementById('chatScroll');
+  const chatLog = document.getElementById('chatLog');
+  const attachmentRow = document.getElementById('attachmentRow');
+  const attachBtn = document.getElementById('attachBtn');
+  const attachMenu = document.getElementById('attachMenu');
+  const fileInput = document.getElementById('fileInput');
+  const textInput = document.getElementById('textInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const resultsPanel = document.getElementById('resultsPanel');
+  const resultsTbody = document.getElementById('resultsTbody');
+  const resultsCount = document.getElementById('resultsCount');
+  const resultsJdBox = document.getElementById('resultsJdBox');
+  const closeResultsBtn = document.getElementById('closeResultsBtn');
+  const viewResultsHeaderBtn = document.getElementById('viewResultsHeaderBtn');
+  const detailOverlay = document.getElementById('detailOverlay');
+  const dmName = document.getElementById('dmName');
+  const dmContact = document.getElementById('dmContact');
+  const dmBody = document.getElementById('dmBody');
+  const dmClose = document.getElementById('dmClose');
+
+  const ICON_BY_TYPE = {
+    doc: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 3.5H14L18 7.5V20.5H6V3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M14 3.5V7.5H18" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+    sheet: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="4" y="4.5" width="16" height="15" rx="1.2" stroke="currentColor" stroke-width="1.4"/></svg>',
+    photo: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="15" rx="1.4" stroke="currentColor" stroke-width="1.4"/></svg>'
+  };
+
+  // ---------- Attach menu ----------
+  attachBtn.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('open'); });
+  document.addEventListener('click', (e) => {
+    if (!attachMenu.contains(e.target) && e.target !== attachBtn) attachMenu.classList.remove('open');
+  });
+  let pendingType = null;
+  document.querySelectorAll('.attach-option').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      pendingType = btn.dataset.type;
+      fileInput.accept = btn.dataset.accept;
+      fileInput.click();
+      attachMenu.classList.remove('open');
+    });
+  });
+  fileInput.addEventListener('change', () => {
+    const selectedFiles = Array.from(fileInput.files || []);
+    selectedFiles.forEach((file) => attachments.push({ type: pendingType, name: file.name, file }));
+    renderAttachmentRow();
+    fileInput.value = '';
+  });
+  function renderAttachmentRow() {
+    if (attachments.length === 0) { attachmentRow.style.display = 'none'; attachmentRow.innerHTML = ''; return; }
+    attachmentRow.style.display = 'flex';
+    attachmentRow.innerHTML = attachments.map((a, i) => `
+      <div class="attachment-chip">
+        ${ICON_BY_TYPE[a.type] || ICON_BY_TYPE.doc}
+        <span class="attachment-name">${escapeHtml(a.name)}</span>
+        <button class="attachment-remove" data-idx="${i}" aria-label="Remove">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 5L19 19M19 5L5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>`).join('');
+    attachmentRow.querySelectorAll('.attachment-remove').forEach((btn) => {
+      btn.addEventListener('click', () => { attachments.splice(Number(btn.dataset.idx), 1); renderAttachmentRow(); });
+    });
+  }
+
+  // ---------- Send: Bot 1 (extract) -> Bot 2 (rank) ----------
+  async function handleSend() {
+    if (isProcessing) return;
+    const jd = textInput.value.trim();
+    if (!jd) { alert('Please type or paste the job description first.'); return; }
+    if (attachments.length === 0) { alert('Please attach at least one resume.'); return; }
+
+    lastJD = jd;
+    messages.push({ role: 'user', text: jd, attachments: attachments.map((a) => ({ type: a.type, name: a.name })) });
+    renderChat();
+
+    const formData = new FormData();
+    attachments.forEach((a) => formData.append('files', a.file));
+    const fileCount = attachments.length;
+    attachments = [];
+    textInput.value = '';
+    renderAttachmentRow();
+
+    isProcessing = true;
+    setControlsDisabled(true);
+    messages.push({ role: 'assistant', processing: true, label: `Bot 1: analyzing ${fileCount} resume(s)...` });
+    renderChat();
+
+    try {
+      // ---- Bot 1: extraction ----
+      const analyzeRes = await fetch(`${API_BASE_URL}/api/analyze`, { method: 'POST', body: formData });
+      const analyzeData = await analyzeRes.json();
+      if (!analyzeData.success) throw new Error(analyzeData.error || 'Bot 1 failed');
+
+      const good = analyzeData.results.filter((r) => !r._error);
+      const failed = analyzeData.results.filter((r) => r._error);
+
+      messages[messages.length - 1] = { role: 'assistant', processing: true, label: `Bot 2: ranking ${good.length} candidate(s) against the JD...` };
+      renderChat();
+
+      // ---- Bot 2: ranking ----
+      const rankRes = await fetch(`${API_BASE_URL}/api/rank`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jd, candidates: good })
+      });
+      const rankData = await rankRes.json();
+      if (!rankData.success) throw new Error(rankData.error || 'Bot 2 failed');
+
+      lastRanked = rankData.ranked || [];
+      isProcessing = false;
+      setControlsDisabled(false);
+
+      let summary = `Ranked ${lastRanked.length} candidate(s) against the job description.`;
+      if (failed.length) summary += ` (${failed.length} file(s) could not be read: ${failed.map(f => f._fileName).join(', ')})`;
+      messages[messages.length - 1] = { role: 'assistant', text: summary, showResultsBtn: true };
+      renderChat();
+      openResults();
+    } catch (err) {
+      isProcessing = false;
+      setControlsDisabled(false);
+      messages[messages.length - 1] = { role: 'assistant', text: `Failed: ${err.message}. Make sure the backend is running (npm start) and GEMINI_API_KEY is set in .env.`, error: true };
+      renderChat();
+    }
+  }
+
+  function setControlsDisabled(disabled) {
+    attachBtn.disabled = disabled;
+    sendBtn.disabled = disabled;
+    textInput.disabled = disabled;
+  }
+  sendBtn.addEventListener('click', handleSend);
+  textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
+  newChatBtn.addEventListener('click', () => {
+    messages = []; attachments = []; isProcessing = false; lastRanked = []; lastJD = '';
+    setControlsDisabled(false);
+    renderAttachmentRow();
+    closeResults();
+    renderChat();
+  });
+
+  // ---------- Chat render ----------
+  function renderChat() {
+    if (messages.length === 0 && !isProcessing) {
+      emptyHero.style.display = 'flex';
+      chatScroll.style.display = 'none';
+      viewResultsHeaderBtn.style.display = 'none';
+      return;
+    }
+    emptyHero.style.display = 'none';
+    chatScroll.style.display = 'block';
+    chatLog.innerHTML = messages.map((m) => {
+      if (m.processing) {
+        return `<div class="msg-row msg-assistant"><div class="msg-bubble msg-bubble-processing">
+          <div class="typing-bubble"><span class="dot" style="animation-delay:0s"></span><span class="dot" style="animation-delay:.15s"></span><span class="dot" style="animation-delay:.3s"></span></div>
+          <span class="processing-label">${escapeHtml(m.label)}</span></div></div>`;
+      }
+      return `<div class="msg-row msg-${m.role} ${m.error ? 'msg-error' : ''}">
+        <div class="msg-bubble">
+          ${m.attachments && m.attachments.length ? `<div class="msg-attachments">${m.attachments.map(a => `<div class="msg-attachment">${ICON_BY_TYPE[a.type] || ICON_BY_TYPE.doc}<span>${escapeHtml(a.name)}</span></div>`).join('')}</div>` : ''}
+          ${m.text ? `<p class="msg-text">${escapeHtml(m.text)}</p>` : ''}
+          ${m.showResultsBtn ? `<button class="view-results-btn" onclick="openResults()">View Ranked Results</button>` : ''}
+        </div></div>`;
+    }).join('');
+    viewResultsHeaderBtn.style.display = lastRanked.length ? 'inline-block' : 'none';
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  }
+
+  // ---------- Results panel ----------
+  function matchClass(pct) {
+    if (pct >= 75) return 'match-high';
+    if (pct >= 50) return 'match-mid';
+    return 'match-low';
+  }
+  function joinField(v) {
+    if (Array.isArray(v)) return v.join(', ');
+    return v || '';
+  }
+  function openResults() {
+    resultsCount.textContent = `${lastRanked.length} candidate(s) ranked`;
+    resultsJdBox.innerHTML = `<b>Job Description:</b> ${escapeHtml(lastJD)}`;
+    resultsTbody.innerHTML = lastRanked.map((c, i) => `
+      <tr onclick="openDetail(${i})">
+        <td><span class="rank-pill ${c.rank === 1 ? 'rank-1' : ''}">${escapeHtml(c.rank ?? (i + 1))}</span></td>
+        <td><span class="match-badge ${matchClass(c.match_percent || 0)}">${c.match_percent ?? '—'}%</span></td>
+        <td class="name-cell">${escapeHtml(c.name || 'Unnamed')}</td>
+        <td>${(Array.isArray(c.skills) ? c.skills.slice(0, 6) : []).map(s => `<span class="skill-chip">${escapeHtml(s)}</span>`).join('')}</td>
+        <td><div class="cell-clamp">${escapeHtml(c.experience_summary || '—')}</div></td>
+        <td><div class="cell-clamp">${escapeHtml(c.projects || '—')}</div></td>
+        <td><div class="cell-clamp">${escapeHtml(c.education || '—')}${c.cgpa ? ' · CGPA ' + escapeHtml(c.cgpa) : ''}</div></td>
+        <td><div class="cell-clamp">${escapeHtml(c.strengths || '—')}</div></td>
+        <td><div class="cell-clamp">${escapeHtml(c.missing_requirements || '—')}</div></td>
+      </tr>`).join('');
+    resultsPanel.classList.add('open');
+  }
+  function closeResults() { resultsPanel.classList.remove('open'); }
+  closeResultsBtn.addEventListener('click', closeResults);
+  viewResultsHeaderBtn.addEventListener('click', openResults);
+
+  // ---------- Detail modal (full unclipped text) ----------
+  function openDetail(i) {
+    const c = lastRanked[i];
+    if (!c) return;
+    dmName.textContent = c.name || 'Unnamed';
+    dmContact.innerHTML = [
+      c.email ? escapeHtml(c.email) : '',
+      c.phone ? escapeHtml(c.phone) : '',
+      c.linkedin ? `<a href="${escapeHtml(c.linkedin)}" target="_blank">LinkedIn</a>` : '',
+      c.github ? `<a href="${escapeHtml(c.github)}" target="_blank">GitHub</a>` : ''
+    ].filter(Boolean).join(' · ');
+
+    const sections = [
+      ['Match', `<div class="detail-match-row"><span class="detail-match-num ${matchClass(c.match_percent||0)}">${c.match_percent ?? '—'}%</span><span>Rank #${c.rank ?? i+1}</span></div>`],
+      ['Why This Rank', escapeHtml(c.why_this_rank || 'Not provided')],
+      ['Skills', escapeHtml(joinField(c.skills) || 'Not mentioned')],
+      ['Experience', escapeHtml(c.experience_summary || 'Not mentioned')],
+      ['Projects', escapeHtml(c.projects || 'Not mentioned')],
+      ['Internships', escapeHtml(c.internships || 'Not mentioned')],
+      ['Open Source', escapeHtml(c.open_source || 'Not mentioned')],
+      ['Hackathons', escapeHtml(c.hackathons || 'Not mentioned')],
+      ['Education', escapeHtml(c.education || 'Not mentioned') + (c.cgpa ? ` · CGPA/%: ${escapeHtml(c.cgpa)}` : '')],
+      ['Strengths', escapeHtml(c.strengths || 'Not mentioned')],
+      ['Missing Requirements', escapeHtml(c.missing_requirements || 'None noted')]
+    ];
+    dmBody.innerHTML = sections.map(([label, html]) => `
+      <div><div class="detail-section-label">${label}</div><div class="detail-section-text">${html}</div></div>`).join('');
+    detailOverlay.classList.add('open');
+  }
+  dmClose.addEventListener('click', () => detailOverlay.classList.remove('open'));
+  detailOverlay.addEventListener('click', (e) => { if (e.target === detailOverlay) detailOverlay.classList.remove('open'); });
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+</script>
+</body>
+</html>
